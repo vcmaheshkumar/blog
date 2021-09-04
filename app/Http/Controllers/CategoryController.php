@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCategoryRequest;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -14,7 +16,10 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return view('dashboard.categories.index');
+        // $categories = Category::with('subCategory')->whereNull('parent_id')->get();
+        return view('dashboard.categories.index', [
+            'categories' => Category::with('subCategories')->whereNull('parent_id')->get(),
+        ]);
     }
 
     /**
@@ -24,7 +29,9 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return view('dashboard.categories.create');
+        return view('dashboard.categories.create', [
+            'categories' => Category::with('subCategories')->whereNull('parent_id')->get(),
+        ]);
     }
 
     /**
@@ -33,20 +40,15 @@ class CategoryController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        //
-    }
+        $category = new Category;
+        $category->name = $request->name;
+        $category->parent_id = $request->parent_id;
+        $category->slug = Str::slug($request->name);
+        $category->save();
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Category  $category
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Category $category)
-    {
-        //
+        return redirect()->route('categories.index')->with('success', 'Category successfully created!');
     }
 
     /**
@@ -57,7 +59,7 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        return view('dashboard.categories.edit');
+        return view('dashboard.categories.edit', compact('category'));
     }
 
     /**
@@ -69,7 +71,16 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        //
+        $this->validate($request, [
+            'name' => ['required', 'unique:categories'],
+            'parent_id' => ['sometimes', 'nullable', 'numeric'],
+        ]);
+
+        $category->name = $request->name;
+        $category->slug = Str::slug($request->name);
+        $category->save();
+
+        return redirect()->route('categories.index')->with('success', 'Category successfully updated!');
     }
 
     /**
@@ -78,8 +89,10 @@ class CategoryController extends Controller
      * @param  \App\Models\Category  $category
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Category $category)
+    public function destroy(Category $category,)
     {
-        //
+        $category->delete();
+        
+        return redirect()->route('categories.index')->with('success', 'Category deleted!');
     }
 }

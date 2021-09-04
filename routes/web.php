@@ -19,17 +19,15 @@ use Illuminate\Support\Facades\Route;
 //  Home Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::group(['middleware' => 'auth', 'prefix' => 'dashboard'], function(){
+Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard'], function(){
 
+     // Dashboard
     Route::group(['prefix' => '', 'as' => 'dashboard.'], function(){
-
-        // Dashboard
-        Route::get('dashboard', [DashboardController::class, 'index'])->name('index');
+        Route::get('/', [DashboardController::class, 'index'])->name('index');
     });
 
     // Categories
-    Route::group(['prefix' => 'categories', 'as' => 'category.'], function(){
-
+    Route::group(['prefix' => 'categories', 'as' => 'categories.'], function(){
         Route::get('/', [CategoryController::class, 'index'])->name('index');
         Route::get('create', [CategoryController::class, 'create'])->name('create');
         Route::post('/', [CategoryController::class, 'store'])->name('store');
@@ -38,8 +36,3 @@ Route::group(['middleware' => 'auth', 'prefix' => 'dashboard'], function(){
         Route::delete('{category:slug}/delete', [CategoryController::class, 'destroy'])->name('delete');
     });
 });
-
-
-Route::middleware(['auth:sanctum', 'verified'])->get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
